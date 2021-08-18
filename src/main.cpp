@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#define DEBUG
 #define GEAR_RATIO 1.2
 // Модели ускорения
   float arrAcc_0[] = {1.00, 1.00};                                                         // Move(ms): 9757 / Calculate(ms):   98 / totalSteps = 7600 / minDelay = 80 / maxDelay = 700 /
@@ -66,34 +65,6 @@
       arrYi[i] = arrAcc[i];
       arrAccSumm = arrAccSumm + arrAcc[i];
     }
-    #ifdef DEBUG1
-      Serial.print("Part size:\t\t");
-      Serial.println(partSize);
-      Serial.print("Size arrow:\t\t");
-      Serial.println(arrAccSize);
-      Serial.print("Arrow acceleration:\t{ ");
-      for (int i = 0; i < arrAccSize; i++)
-      {
-        Serial.print(arrAcc[i]);
-        Serial.print(", ");
-      }
-      Serial.println("}");
-      Serial.print("Arrow Xi:\t\t{ ");
-      for (int i = 0; i < arrAccSize; i++)
-      {
-        Serial.print(arrXi[i]);
-        Serial.print(", ");
-      }
-      Serial.println("}");
-      Serial.print("Arrow Yi:\t\t{ ");
-      for (int i = 0; i < arrAccSize; i++)
-      {
-        Serial.print(arrYi[i]);
-        Serial.print(", ");
-      }
-      Serial.println("}");
-      Serial.println("-------------------------------");
-    #endif
   }
   void WriteArrayDelays(){
     delete[] arrDelays;
@@ -109,29 +80,8 @@
     float minGearValue = (arrAccSumm / arrAccSize) / GEAR_RATIO;
     float deltaGear = gearsTransmission - minGearValue;
     float specificGear = deltaGear / gearsTransmission;
-    #ifdef DEBUG
-      Serial.print("Current gear:\t\t");
-      Serial.println(currentGear);
-    #endif
     currentGear = minGearValue + (currentGear * specificGear);
     currentDelay = maxDelay - (((maxDelay - minDelay) / gearsTransmission) * currentGear);
-    
-      Serial.print("Arrow ACC summ:\t\t");
-      Serial.println(arrAccSumm);
-      Serial.print("Arrow ACC size:\t\t");
-      Serial.println(arrAccSize);
-      Serial.print("Min gear value:\t\t");
-      Serial.println(minGearValue);
-      Serial.print("Delta gear:\t\t");
-      Serial.println(deltaGear);
-      Serial.print("Specific gear:\t\t");
-      Serial.println(specificGear);
-      Serial.print("Current gear:\t\t");
-      Serial.println(currentGear);
-      Serial.print("Current delay:\t\t");
-      Serial.println(currentDelay);
-      Serial.println("-------------------------------");
-    
     // Обход всех X и запись всех Y в массив
     for(int x = 1; x <= totalSteps; x++)
     {
@@ -145,12 +95,6 @@
         {
           // Запись массива с числителями i-го агрумента
           arrArgNumer[counter] = yI; // Запись Yi-го
-          #ifdef DEBUG1
-            Serial.print("Counter:\t\t");
-            Serial.println(counter);
-            Serial.print("Yi:\t\t\t");
-            Serial.println(arrArgNumer[counter]);
-          #endif
           for(byte i = 0; i < arrAccSize; i++) // Запись Хi-ых
           {
             if(i != counter){
@@ -165,15 +109,6 @@
               #endif
             }
           }
-          #ifdef DEBUG1
-            Serial.print("Arrow numerator:\t{ ");
-            for (byte i = 0; i < arrAccSize; i++)
-            {
-              Serial.print(arrArgNumer[i]);
-              Serial.print(", ");
-            }
-            Serial.println("}");
-          #endif
           // Запись массива со знаменателями i-го аргумента
           int denom = 0;
           int counterArrArgDenom = 0;
@@ -185,75 +120,28 @@
               counterArrArgDenom++;
             }
           }
-          #ifdef DEBUG1
-            Serial.print("Arrow denominator:\t{ ");
-            for (byte i = 0; i < (arrAccSize - 1); i++)
-            {
-              Serial.print(arrArgDenom[i]);
-              Serial.print(", ");
-            }
-            Serial.println("}");
-          #endif
           // Подсчет числителя
           numerator = 1;
           for(byte i = 0; i < arrAccSize; i++)
           {
             numerator = numerator * arrArgNumer[i];
           }
-          #ifdef DEBUG1
-            Serial.print("Numerator:\t\t");
-            Serial.println(numerator);
-          #endif
           // Подсчет знаминателя
           denominator = 1; 
           for(byte i = 0; i < (arrAccSize - 1); i++)
           {
             denominator = denominator * arrArgDenom[i];
           }
-          #ifdef DEBUG1
-            Serial.print("Denominator:\t\t");
-            Serial.println(denominator);
-            Serial.println("-------------------------------");
-          #endif
           // Запись i-го аргумента в массив
           arrArgI[counter] = numerator / denominator;
-          #ifdef DEBUG1
-            Serial.print("Argument i:\t\t");
-            Serial.println(arrArgI[counter]);
-          #endif
-          #ifdef DEBUG1
-            Serial.print("i:\t\t\t");
-            Serial.println(i);
-            Serial.print("Counter:\t\t");
-            Serial.println(counter);
-            Serial.print("Optimizer counter:\t");
-            Serial.println(optimCounter);
-            Serial.println("-------------------------------");
-          #endif
           // Расчет и запись всех Y
           if(argProdCounter == 0){
             y = y + arrArgI[counter];
             if(counter == (arrAccSize - 1)){
               arrDelays[(x-1)] = round(maxDelay -(y * (maxDelay - currentDelay)/(gearsTransmission + 1)));
-              #ifdef DEBUG1
-                Serial.print("X: ");
-                Serial.print(x);
-                Serial.print("\t\t\t");
-                Serial.print("Y: ");
-                Serial.println(y);
-              #endif
               y = 0;
             }
           }
-          #ifdef DEBUG1
-            Serial.print("X:\t\t\t");
-            Serial.println(x);
-            Serial.print("Y:\t\t\t");
-            Serial.println(y);
-            Serial.print("Counter:\t\t");
-            Serial.println(counter);
-            Serial.println("-------------------------------");
-          #endif
           argProdCounter++;
         }
         argProdCounter = 0;
@@ -261,27 +149,11 @@
       }
       counter = 0;
     }
-    #ifdef DEBUG1
-      for(int x = 1; x <= totalSteps; x++)
-      {
-        Serial.print("X: ");
-        Serial.print(x);
-        Serial.print("\t\t\t");
-        Serial.print("Y: ");
-        Serial.println(arrDelays[(x-1)]);
-      }
-    #endif
     delete[] arrXi;
     delete[] arrYi;
   }
   
   void setup(){
-    #ifdef DEBUG
-      Serial.begin(921600);
-      Serial.println();
-      Serial.println("-------------------------------");
-    #endif
-
     pinMode (PUL, OUTPUT);
     pinMode (DIR, OUTPUT);
     pinMode (ENA, OUTPUT);
@@ -332,24 +204,11 @@
       break;
     }
     WriteArrayDelays();
-    #ifdef DEBUG
-      Serial.print("Boot time:\t\t");
-      Serial.print(millis());
-      Serial.println(" ms");
-      Serial.println("-------------------------------");
-    #endif
     delay(2000);
   }
 // Движение
   int Move(bool direction, int totalSteps){
     int x = 0;
-    #ifdef DEBUG
-      Serial.println("START OF MOVEMENT");
-      Serial.print("Total steps:\t\t");
-      Serial.println(totalSteps);
-      Serial.println("-------------------------------");
-      int time = millis();
-    #endif
     digitalWrite(DIR,direction);
     digitalWrite(ENA,HIGH);
     for(; x <= totalSteps; x++)
@@ -363,14 +222,6 @@
       }
     }
     digitalWrite(ENA,LOW);
-    #ifdef DEBUG
-      time = millis() - time;
-      Serial.println("END OF MOVEMENT");
-      Serial.print("Total time:\t\t");
-      Serial.print(time);
-      Serial.println(" ms");
-      Serial.println("-------------------------------");
-    #endif 
     return x;
   }
   void loop(){
